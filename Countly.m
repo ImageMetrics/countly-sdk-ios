@@ -24,7 +24,7 @@
 #   define COUNTLY_LOG(...)
 #endif
 
-#define COUNTLY_VERSION "2.0"
+#define COUNTLY_VERSION "1000.0"
 #define COUNTLY_DEFAULT_UPDATE_INTERVAL 60.0
 #define COUNTLY_EVENT_SEND_THRESHOLD 10
 
@@ -443,6 +443,7 @@ NSString* CountlyURLUnescapedString(NSString* string)
 #if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
 @property (nonatomic, assign) UIBackgroundTaskIdentifier bgTask;
 #endif
+@property (atomic, retain) NSUUID *sessionId;
 
 + (instancetype)sharedInstance;
 
@@ -485,12 +486,17 @@ NSString* CountlyURLUnescapedString(NSString* string)
     COUNTLY_LOG(@"Request Started \n %@", urlString);
 }
 
-- (void)beginSession
+- (void)beginSession:(BOOL)isAppLaunch
 {
-	NSString *data = [NSString stringWithFormat:@"app_key=%@&device_id=%@&timestamp=%ld&sdk_version="COUNTLY_VERSION"&begin_session=1&metrics=%@",
+  // Reset the session id
+  self.sessionId = [NSUUID UUID];
+
+	NSString *data = [NSString stringWithFormat:@"app_key=%@&device_id=%@&timestamp=%ld&sdk_version="COUNTLY_VERSION"&begin_session=1&is_app_launch=%d&session_id=%@&metrics=%@",
 					  self.appKey,
 					  [CountlyDeviceInfo udid],
 					  time(NULL),
+            isAppLaunch ? 1 : 0,
+            [self.sessionId UUIDString],
 					  [CountlyDeviceInfo metrics]];
     
     [[CountlyDB sharedInstance] addToQueue:data];
@@ -500,9 +506,10 @@ NSString* CountlyURLUnescapedString(NSString* string)
 
 - (void)updateSessionWithDuration:(int)duration
 {
-	NSString *data = [NSString stringWithFormat:@"app_key=%@&device_id=%@&timestamp=%ld&session_duration=%d",
+	NSString *data = [NSString stringWithFormat:@"app_key=%@&device_id=%@&session_id=%@&timestamp=%ld&session_duration=%d",
 					  self.appKey,
 					  [CountlyDeviceInfo udid],
+            [self.sessionId UUIDString],
 					  time(NULL),
 					  duration];
     
@@ -513,9 +520,10 @@ NSString* CountlyURLUnescapedString(NSString* string)
 
 - (void)endSessionWithDuration:(int)duration
 {
-	NSString *data = [NSString stringWithFormat:@"app_key=%@&device_id=%@&timestamp=%ld&end_session=1&session_duration=%d",
+	NSString *data = [NSString stringWithFormat:@"app_key=%@&device_id=%@&session_id=%@&timestamp=%ld&end_session=1&session_duration=%d",
 					  self.appKey,
 					  [CountlyDeviceInfo udid],
+            [self.sessionId UUIDString],
 					  time(NULL),
 					  duration];
     
@@ -526,9 +534,10 @@ NSString* CountlyURLUnescapedString(NSString* string)
 
 - (void)recordEvents:(NSString *)events
 {
-	NSString *data = [NSString stringWithFormat:@"app_key=%@&device_id=%@&timestamp=%ld&events=%@",
+	NSString *data = [NSString stringWithFormat:@"app_key=%@&device_id=%@&session_id=%@&timestamp=%ld&events=%@",
 					  self.appKey,
 					  [CountlyDeviceInfo udid],
+            [self.sessionId UUIDString],
 					  time(NULL),
 					  events];
     
@@ -655,7 +664,7 @@ NSString* CountlyURLUnescapedString(NSString* string)
 	lastTime = CFAbsoluteTimeGetCurrent();
 	[[CountlyConnectionQueue sharedInstance] setAppKey:appKey];
 	[[CountlyConnectionQueue sharedInstance] setAppHost:appHost];
-	[[CountlyConnectionQueue sharedInstance] beginSession];
+	[[CountlyConnectionQueue sharedInstance] beginSession:TRUE];
 }
 
 - (void)startOnCloudWithAppKey:(NSString *)appKey
@@ -731,7 +740,7 @@ NSString* CountlyURLUnescapedString(NSString* string)
 {
 	lastTime = CFAbsoluteTimeGetCurrent();
     
-	[[CountlyConnectionQueue sharedInstance] beginSession];
+	[[CountlyConnectionQueue sharedInstance] beginSession:FALSE];
     
 	isSuspended = NO;
 }
