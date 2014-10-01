@@ -443,7 +443,10 @@ NSString* CountlyURLUnescapedString(NSString* string)
 #if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
 @property (nonatomic, assign) UIBackgroundTaskIdentifier bgTask;
 #endif
+
+// ADDED BY IMAGE METRICS
 @property (atomic, retain) NSUUID *sessionId;
+@property (atomic, retain) NSString *countryCode;
 
 + (instancetype)sharedInstance;
 
@@ -496,7 +499,7 @@ NSString* CountlyURLUnescapedString(NSString* string)
 					  [CountlyDeviceInfo udid],
 					  time(NULL),
             isAppLaunch ? 1 : 0,
-            [self.sessionId UUIDString],
+            self.sessionId.UUIDString,
 					  [CountlyDeviceInfo metrics]];
     
     [[CountlyDB sharedInstance] addToQueue:data];
@@ -509,7 +512,7 @@ NSString* CountlyURLUnescapedString(NSString* string)
 	NSString *data = [NSString stringWithFormat:@"app_key=%@&device_id=%@&session_id=%@&timestamp=%ld&session_duration=%d",
 					  self.appKey,
 					  [CountlyDeviceInfo udid],
-            [self.sessionId UUIDString],
+            self.sessionId.UUIDString,
 					  time(NULL),
 					  duration];
     
@@ -523,7 +526,7 @@ NSString* CountlyURLUnescapedString(NSString* string)
 	NSString *data = [NSString stringWithFormat:@"app_key=%@&device_id=%@&session_id=%@&timestamp=%ld&end_session=1&session_duration=%d",
 					  self.appKey,
 					  [CountlyDeviceInfo udid],
-            [self.sessionId UUIDString],
+            self.sessionId.UUIDString,
 					  time(NULL),
 					  duration];
     
@@ -534,10 +537,11 @@ NSString* CountlyURLUnescapedString(NSString* string)
 
 - (void)recordEvents:(NSString *)events
 {
-	NSString *data = [NSString stringWithFormat:@"app_key=%@&device_id=%@&session_id=%@&timestamp=%ld&events=%@",
+	NSString *data = [NSString stringWithFormat:@"app_key=%@&device_id=%@&session_id=%@&country_code=%@&timestamp=%ld&events=%@",
 					  self.appKey,
 					  [CountlyDeviceInfo udid],
-            [self.sessionId UUIDString],
+            self.sessionId.UUIDString,
+            ![self.countryCode isEqualToString:@""] ? self.countryCode : @"<none>",
 					  time(NULL),
 					  events];
     
@@ -670,6 +674,11 @@ NSString* CountlyURLUnescapedString(NSString* string)
 - (void)startOnCloudWithAppKey:(NSString *)appKey
 {
     [self start:appKey withHost:@"https://cloud.count.ly"];
+}
+
+- (void)setCountryCode:(NSString *)countryCode
+{
+  [CountlyConnectionQueue sharedInstance].countryCode = countryCode;
 }
 
 - (void)recordEvent:(NSString *)key count:(int)count

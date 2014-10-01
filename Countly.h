@@ -24,6 +24,8 @@
 
 - (void)startOnCloudWithAppKey:(NSString *)appKey;
 
+- (void)setCountryCode:(NSString *)countryCode;
+
 - (void)recordEvent:(NSString *)key count:(int)count;
 
 - (void)recordEvent:(NSString *)key count:(int)count sum:(double)sum;
