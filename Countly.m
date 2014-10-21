@@ -494,14 +494,15 @@ NSString* CountlyURLUnescapedString(NSString* string)
   // Reset the session id
   self.sessionId = [NSUUID UUID];
 
-	NSString *data = [NSString stringWithFormat:@"app_key=%@&device_id=%@&timestamp=%ld&sdk_version="COUNTLY_VERSION"&begin_session=1&is_app_launch=%d&session_id=%@&metrics=%@",
+	NSString *data = [NSString stringWithFormat:@"app_key=%@&device_id=%@&timestamp=%ld&sdk_version="COUNTLY_VERSION"&begin_session=1&is_app_launch=%d&session_id=%@&metrics=%@&country_code=%@",
 					  self.appKey,
 					  [CountlyDeviceInfo udid],
 					  time(NULL),
             isAppLaunch ? 1 : 0,
             self.sessionId.UUIDString,
-					  [CountlyDeviceInfo metrics]];
-    
+					  [CountlyDeviceInfo metrics],
+            ![self.countryCode isEqualToString:@""] ? self.countryCode : @"<none>"];
+
     [[CountlyDB sharedInstance] addToQueue:data];
     
 	[self tick];
@@ -509,13 +510,14 @@ NSString* CountlyURLUnescapedString(NSString* string)
 
 - (void)updateSessionWithDuration:(int)duration
 {
-	NSString *data = [NSString stringWithFormat:@"app_key=%@&device_id=%@&session_id=%@&timestamp=%ld&session_duration=%d",
+	NSString *data = [NSString stringWithFormat:@"app_key=%@&device_id=%@&session_id=%@&timestamp=%ld&session_duration=%d&country_code=%@",
 					  self.appKey,
 					  [CountlyDeviceInfo udid],
             self.sessionId.UUIDString,
 					  time(NULL),
-					  duration];
-    
+            duration,
+            ![self.countryCode isEqualToString:@""] ? self.countryCode : @"<none>"];
+
     [[CountlyDB sharedInstance] addToQueue:data];
     
 	[self tick];
@@ -523,13 +525,14 @@ NSString* CountlyURLUnescapedString(NSString* string)
 
 - (void)endSessionWithDuration:(int)duration
 {
-	NSString *data = [NSString stringWithFormat:@"app_key=%@&device_id=%@&session_id=%@&timestamp=%ld&end_session=1&session_duration=%d",
+	NSString *data = [NSString stringWithFormat:@"app_key=%@&device_id=%@&session_id=%@&timestamp=%ld&end_session=1&session_duration=%d&country_code=%@",
 					  self.appKey,
 					  [CountlyDeviceInfo udid],
             self.sessionId.UUIDString,
 					  time(NULL),
-					  duration];
-    
+            duration,
+            ![self.countryCode isEqualToString:@""] ? self.countryCode : @"<none>"];
+
     [[CountlyDB sharedInstance] addToQueue:data];
     
 	[self tick];
