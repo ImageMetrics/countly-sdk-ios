@@ -153,7 +153,7 @@
 	lastTime = NSDate.date.timeIntervalSince1970;
 	CountlyConnectionManager.sharedInstance.appKey = appKey;
 	CountlyConnectionManager.sharedInstance.appHost = appHost;
-	[CountlyConnectionManager.sharedInstance beginSession];
+  [CountlyConnectionManager.sharedInstance beginSession:TRUE];
 }
 
 
@@ -354,7 +354,7 @@
     
     lastTime = NSDate.date.timeIntervalSince1970;
     
-	[CountlyConnectionManager.sharedInstance beginSession];
+  [CountlyConnectionManager.sharedInstance beginSession:FALSE];
     
 	isSuspended = NO;
 }
@@ -728,5 +728,11 @@
     return CountlyViewTracking.sharedInstance.isAutoViewTrackingEnabled;
 }
 #endif
+
+// IM ADDED
+- (void)setCountryCode:(NSString *)countryCode
+{
+  [CountlyConnectionManager sharedInstance].countryCode = countryCode;
+}
 
 @end

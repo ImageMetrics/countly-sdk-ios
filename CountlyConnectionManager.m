@@ -112,10 +112,16 @@
 
 #pragma mark ---
 
-- (void)beginSession
+- (void)beginSession:(BOOL)isAppLaunch
 {
-    NSString* queryString = [[self queryEssentials] stringByAppendingFormat:@"&begin_session=1&metrics=%@",
-                             [CountlyDeviceInfo metrics]];
+  // Reset the session id
+  self.sessionId = [NSUUID UUID];
+
+  NSString* queryString = [[self queryEssentials] stringByAppendingFormat:@"&begin_session=1&metrics=%@&is_app_launch=%d&session_id=%@&country_code=%@",
+                             [CountlyDeviceInfo metrics],
+                             isAppLaunch ? 1 : 0,
+                             self.sessionId.UUIDString,
+                            ![self.countryCode isEqualToString:@""] ? self.countryCode : @"<none>"];
     
     [CountlyPersistency.sharedInstance addToQueue:queryString];
     
@@ -124,7 +130,10 @@
 
 - (void)updateSessionWithDuration:(int)duration
 {
-    NSString* queryString = [[self queryEssentials] stringByAppendingFormat:@"&session_duration=%d", duration];
+    NSString* queryString = [[self queryEssentials] stringByAppendingFormat:@"&session_duration=%d&session_id=%@&country_code=%@",
+                             duration,
+                             self.sessionId.UUIDString,
+                             ![self.countryCode isEqualToString:@""] ? self.countryCode : @"<none>"];
         
     [CountlyPersistency.sharedInstance addToQueue:queryString];
     
@@ -133,7 +142,10 @@
 
 - (void)endSessionWithDuration:(int)duration
 {
-    NSString* queryString = [[self queryEssentials] stringByAppendingFormat:@"&end_session=1&session_duration=%d", duration];
+    NSString* queryString = [[self queryEssentials] stringByAppendingFormat:@"&end_session=1&session_duration=%d&session_id=%@&country_code=%@",
+                             duration,
+                             self.sessionId.UUIDString,
+                             ![self.countryCode isEqualToString:@""] ? self.countryCode : @"<none>"];
     
     [CountlyPersistency.sharedInstance addToQueue:queryString];
     
@@ -155,7 +167,10 @@
         }
     }
     
-    NSString* queryString = [[self queryEssentials] stringByAppendingFormat:@"&events=%@", [eventsArray JSONify]];
+    NSString* queryString = [[self queryEssentials] stringByAppendingFormat:@"&end_session=1&session_id=%@&country_code=%@&events=%@",
+                             self.sessionId.UUIDString,
+                             ![self.countryCode isEqualToString:@""] ? self.countryCode : @"<none>",
+                             [eventsArray JSONify]];
     
     [CountlyPersistency.sharedInstance addToQueue:queryString];
     

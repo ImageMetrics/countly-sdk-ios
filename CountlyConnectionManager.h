@@ -21,7 +21,7 @@
 
 + (instancetype)sharedInstance;
 
-- (void)beginSession;
+- (void)beginSession:(BOOL)isAppLaunch;
 - (void)updateSessionWithDuration:(int)duration;
 - (void)endSessionWithDuration:(int)duration;
 
@@ -35,4 +35,10 @@
 
 - (NSString *)queryEssentials;
 
+
+/**
+ * IM ADDED
+ */
+@property (atomic, retain) NSUUID *sessionId;
+@property (atomic, retain) NSString *countryCode; // TODO: Generalize this into a dictionary which gets sent with each request
 @end
